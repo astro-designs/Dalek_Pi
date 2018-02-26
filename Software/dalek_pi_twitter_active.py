@@ -22,10 +22,13 @@ key.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(key)
 
+CameraOn = False
+DriveOn = False
+
 def dalek_start():
     global screen_name
     i = datetime.now()
-    status = 'Dalek_Pi is now on-line. Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+    status = 'Dalek_Pi (v2.01.05) is now on-line. Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S') 
     print "Starting up... Tweeting:", status
     api.update_status(status=status)
     
@@ -47,7 +50,7 @@ class Stream2Screen(tweepy.StreamListener):
         self.m = 20
 
     def on_status(self, status):
-        global tweet_rxd, tweet_rxd_data, screen_name
+        global tweet_rxd, tweet_rxd_data, screen_name, CameraOn, DriveOn
 #        api = tweepy.API(key)
         tweet_rxd = status.text.encode('utf8')
         tweet_rxd = str(tweet_rxd)
@@ -61,10 +64,16 @@ class Stream2Screen(tweepy.StreamListener):
         tweet_rxd_data = str(tweet_rxd_data)
         get_user()
         print "Sender: "+screen_name+" ("+user_name+")"
+        tweet_rxd = tweet_rxd.lower()
         print "Message:", tweet_rxd
     
         if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
-            dalek_move()
+            if DriveOn == True:
+                dalek_move()
+            else:
+                i = datetime.now()
+                status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+                api.update_status(status=status)
         elif tweet_split[0] == 'look': # Deal with any look requests from a separate function...
             dalek_look()
         elif tweet_split[0] == 'voice': # Deal with any look requests from a separate function...
@@ -84,13 +93,17 @@ class Stream2Screen(tweepy.StreamListener):
             now = i.strftime('%Y%m%d-%H%M%S')
             photo_name = now + '.jpg'
             photo_path = '/home/pi/' + photo_name
-            print "Taking picture: " + photo_path
-            bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
-            os.system(bashCommand)
-            # Alternatively, send a test-image... Should probably define a global to enable / disable this...
             test_photo_name = 'DalekPi-TestImage.jpg'
             test_photo_path = '/home/pi/' + test_photo_name
-            status = screen_name + ' ' + 'Photo auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+            if CameraOn == True:
+                print "Taking picture: " + photo_path
+                bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
+                os.system(bashCommand)
+                status = screen_name + ' ' + 'Photo auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+            else:
+                print "Camera is off-line. Sending test image"
+                # Alternatively, send a test-image... Should probably define a global to enable / disable this...
+                status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
             print "testing tweet_pic:" + status
             # Check if the file exists before tweeting...
             if os.path.exists(photo_path):
@@ -113,6 +126,18 @@ class Stream2Screen(tweepy.StreamListener):
             bashCommand = ("sudo ./text2speech.sh Exterminayte!")
             print "echo:"+bashCommand
             os.system(bashCommand)
+        elif tweet_split[0] == 'driveon' and screen_name == "@AstroDesignsLtd":
+            print "Turning on drive"
+            DriveOn = True
+        elif tweet_split[0] == 'driveoff' and screen_name == "@AstroDesignsLtd":
+            print "Turning off drive"
+            DriveOn = False
+        elif tweet_split[0] == 'cameraon' and screen_name == "@AstroDesignsLtd":
+            print "Turning camera on"
+            CameraOn = True
+        elif tweet_split[0] == 'cameraoff' and screen_name == "@AstroDesignsLtd":
+            print "Turning camera off"
+            CameraOn = False
         elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
             dalek_stop()
             print "Exit command received & understood. Bye!"
@@ -201,7 +226,11 @@ def dalek_move():
                 pio_command = "pio dalek-right"
             elif split_current_command[0] == "back":
                 pio_command = "pio dalek-backwards"
+            elif split_current_command[0] == "backwards":
+                pio_command = "pio dalek-backwards"
             elif split_current_command[0] == "forward":
+               pio_command = "pio dalek-forwards"             
+            elif split_current_command[0] == "forwards":
                pio_command = "pio dalek-forwards"             
             else:
                 print "Command not recognised"

@@ -26,7 +26,7 @@ RemoteControl = True
 #StartTweet = 'Dalek_Pi (v2.01.07) is now on-line, LIVE in the Workshop at Wychwood 2018! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
 #StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at #RaspberryFields ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
 #StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the @CotswoldJam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
-#StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! '
+StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! '
 
 # Stop Message
 # ------------

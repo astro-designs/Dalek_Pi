@@ -1061,14 +1061,10 @@ def dalek_move():
                 Left()
             elif split_current_command[0] == "right":
                 Right()
-            #elif split_current_command[0] == "Back":
-            #    Backwards()
             elif split_current_command[0] == "back":
                 Backwards()
             elif split_current_command[0] == "backwards":
                 Backwards()
-            #elif split_current_command[0] == "Backwards":
-            #    Backwards()
             elif split_current_command[0] == "forward":
                Forwards()
             elif split_current_command[0] == "forwards":
@@ -1079,11 +1075,10 @@ def dalek_move():
                 if DebugOn: print "Command not recognised"
                 break # Exit for-loop if command isn't recognised
 
-            value = split_current_command[1] / 1000.0
+            value = float(split_current_command[1]) / 1000.0
     
             time.sleep(value)
             StopMotors()
-            if DebugOn: print "echo:"+bashCommand
 
 # Allow module to settle
 time.sleep(0.5)

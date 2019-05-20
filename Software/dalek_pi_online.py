@@ -764,7 +764,7 @@ def dalek_start():
     if dalek_pi.TweetStart == True:
         i = datetime.now()
         status = dalek_pi.StartTweet + i.strftime('%Y/%m/%d %H:%M:%S')
-        print "Starting up... Tweeting:", status
+        if DebugOn: print "Starting up... Tweeting:", status
         api.update_status(status=status)
     else:
         print "Starting up... (No Tweeting)"
@@ -798,37 +798,51 @@ class Stream2Screen(tweepy.StreamListener):
         tweet_rxd = tweet_rxd.lstrip('@dalek_pi')
         tweet_rxd = tweet_rxd.lstrip('@Dalek_pi')
         tweet_rxd = tweet_rxd.lstrip('@dalek_Pi')
+        tweet_rxd = tweet_rxd.lower()
         tweet_split = tweet_rxd.split()
+
         tweet_rxd_data = status.user
         tweet_rxd_data = str(tweet_rxd_data)
         get_user()
-        print "Sender: "+screen_name+" ("+user_name+")"
-        tweet_rxd = tweet_rxd.lower()
-        print "Message:", tweet_rxd
-        print tweet_split[0]
+        
+        if DebugOn: print("Sender: "+screen_name+" ("+user_name+")")
+        if DebugOn: print("Message:", tweet_rxd)
+        if DebugOn: print(tweet_split[0])
     
-        if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
+        # Process movement requests...
+        if tweet_split[0] == 'move':
             if DriveOn == True:
                 dalek_move()
             else:
                 i = datetime.now()
                 status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
                 api.update_status(status=status)
-        elif tweet_split[0] == 'look': # Deal with any look requests from a separate function...
+        
+        # Process headpiece movement requests...
+        elif tweet_split[0] == 'look':
             dalek_look()
-        elif tweet_split[0] == 'voice': # Deal with any look requests from a separate function...
+            
+        # Process voice-box requests...
+        elif tweet_split[0] == 'voice':
             dalek_voice()
+            
+        # Process speach requests...
         elif tweet_split[0] == 'say': # Speak whatever comes next...
             dalek_say()
-        elif tweet_split[0] == 'tweet_help': # Tweet the help-sheet back to whoever sent the tweet
+            
+        # Process help requests...
+        elif tweet_split[0] == 'tweet_help':
             i = datetime.now()
             now = i.strftime('%Y%m%d-%H%M%S')
             image_name = 'help.jpg'
             image_path = '/home/pi/' + image_name
-            status = screen_name + ' ' + 'Help-sheet auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-            print "testing tweet_help"
+            status = screen_name + ' ' + 'Dalek_Pi Help-sheet: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+            if DebugOn:
+                if DebugOn: print "testing tweet_help"
             api.update_with_media(image_path, status=status)
-        elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
+            
+        # Process picture requests...
+        elif tweet_split[0] == 'tweet_pic':
             i = datetime.now()
             now = i.strftime('%Y%m%d-%H%M%S')
             photo_name = now + '.jpg'
@@ -836,92 +850,96 @@ class Stream2Screen(tweepy.StreamListener):
             test_photo_name = 'DalekPi-TestImage.jpg'
             test_photo_path = '/home/pi/' + test_photo_name
             if CameraOn == True:
-                print "Taking picture: " + photo_path
+                if DebugOn: print "Taking picture: " + photo_path
                 bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
                 os.system(bashCommand)
                 status = screen_name + ' ' + 'Photo auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
             else:
-                print "Camera is off-line. Sending test image"
+                if DebugOn: print "Camera is off-line. Sending test image"
                 # Alternatively, send a test-image... Should probably define a global to enable / disable this...
                 status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
             print "testing tweet_pic:" + status
             # Check if the file exists before tweeting...
             if os.path.exists(photo_path):
-                 print "Tweeting image:" + photo_path
+                 if DebugOn: print "Tweeting image:" + photo_path
                  api.update_with_media(photo_path, status=status)
             elif os.path.exists(test_photo_path):
-                 print "Tweeting test image:" + test_photo_path
+                 if DebugOn: print "Tweeting test image:" + test_photo_path
                  api.update_with_media(test_photo_path, status=status)
+        
+        # Process request to start line-follower function
         elif tweet_split[0] == 'start_linefollow': # Start line-follower mode. May need to lock-out any other commands if this is running in the background
             bashCommand = ("pio spi-set 0x07 0")
             os.system(bashCommand)
             bashCommand = ("pio dalek-linefollower 1&")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
         elif tweet_split[0] == 'stop_linefollow':
             bashCommand = ("pio spi-set 0x07 1")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
+        
         elif tweet_split[0] == 'say_exterminate':
             bashCommand = ("sudo ./text2speech.sh Exterminayte!")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
+        
+        # Process restricted commands...
         elif tweet_split[0] == 'Debug_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning on debug"
+            if DebugOn: print "Turning on debug"
             DebugOn = True
         elif tweet_split[0] == 'Debug_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning off debug"
+            if DebugOn: print "Turning off debug"
             DebugOn = False
         elif tweet_split[0] == 'Drive_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning on drive"
+            if DebugOn: print "Turning on drive"
             DriveOn = True
         elif tweet_split[0] == 'Drive_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning off drive"
-            DriveOn = False
+            if DebugOn: print "Turning off drive"
+            if DebugOn: DriveOn = False
         elif tweet_split[0] == 'Camera_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning camera on"
+            if DebugOn: print "Turning camera on"
             CameraOn = True
         elif tweet_split[0] == 'Camera_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning camera off"
+            if DebugOn: print "Turning camera off"
             CameraOn = False
         elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
             dalek_stop()
-            print "Exit command received & understood. Bye!"
+            if DebugOn: print "Exit command received & understood. Bye!"
             #os._exit
             raise SystemExit
-            
         elif tweet_split[0] == 'reboot' and screen_name == "@AstroDesignsLtd":
             dalek_stop()
             bashCommand = ("sudo ./text2speech.sh Rebooting! Back in a jiffy")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
             bashCommand = ("reboot")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
         elif tweet_split[0] == 'halt' and screen_name == "@AstroDesignsLtd":
             dalek_stop()
             bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
             bashCommand = ("halt")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
         elif tweet_split[0] == 'Shutdown' and screen_name == "@AstroDesignsLtd":
             dalek_stop()
             bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
             bashCommand = ("shutdown")
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
             os.system(bashCommand)
         else:
-            print "Command not recognised"
-            print "Command: ", "\"", tweet_split[0], "\""
-            print "Screen Name: ", screen_name
+            if DebugOn: print "Command not recognised"
+            if DebugOn: print "Command: ", "\"", tweet_split[0], "\""
+            if DebugOn: print "Screen Name: ", screen_name
             self.n = self.n+1
             if self.n < self.m: return True
             else:
-                print 'tweets = '+str(self.n)
+                if DebugOn: print 'tweets = '+str(self.n)
                 return False
 
 # Identify user (screen name & user name) from incoming tweet
@@ -949,7 +967,7 @@ def get_user():
             user_name = user_name+pos_let
             count +=1
         elif ord(pos_let) == 39: break
-    print "New tweet from: "+screen_name+" ("+user_name+")"
+    if DebugOn: print "New tweet from: "+screen_name+" ("+user_name+")"
     return
 
 
@@ -959,10 +977,10 @@ def dalek_say():
     global tweet_rxd, tweet_rxd_data, user_name
     tweet_rxd = tweet_rxd.lstrip(' say')
     tweet_rxd = tweet_rxd.lstrip(' ')
-    print "Dalek_Speak: ",tweet_rxd
+    if DebugOn: print "Dalek_Speak: ",tweet_rxd
     command = 'sudo ./text2speech.sh '+tweet_rxd
     bashCommand = (str(command))
-    print "echo:"+bashCommand
+    if DebugOn: print "echo:"+bashCommand
     os.system(bashCommand)
 
 
@@ -974,7 +992,7 @@ def dalek_voice():
     voice_cmd = tweet_rxd.lstrip('voice')
     voice_cmd = voice_cmd.lstrip(' ')
     voice_cmd_split = voice_cmd.split()
-    print "voice_cmd_split:",voice_cmd_split
+    if DebugOn: print "voice_cmd_split:",voice_cmd_split
     if voice_cmd_split[0] == "1":
         GPIO.output(pinDalekSpeak1, True)
     elif voice_cmd_split[0] == "2":
@@ -1005,7 +1023,7 @@ def dalek_look():
     look_cmd = tweet_rxd.lstrip('look')
     look_cmd = look_cmd.lstrip(' ')
     look_cmd_split = look_cmd.split()
-    print "look_cmd_split:",look_cmd_split
+    if DebugOn: print "look_cmd_split:",look_cmd_split
     if look_cmd_split[0] == "left":
         wiringpi.pwmWrite(pinServo1,LookLeft)
     elif look_cmd_split[0] == "right":
@@ -1028,49 +1046,51 @@ def dalek_look():
 def dalek_move():
     global tweet_rxd
     tweet_rxd = tweet_rxd.lstrip(' move')
-    print "move tweet_rxd:",tweet_rxd
+    if DebugOn: print "move tweet_rxd:",tweet_rxd
     commands = tweet_rxd.split(',')
-    print "No. Commands:",len(commands)
+    if DebugOn: print "No. Commands:",len(commands)
     for each in range(0, len(commands)):
         current_command = commands[each]
-        print "current_command1:",current_command
+        if DebugOn: print "current_command1:",current_command
         current_command = current_command.lstrip(' ')
-        print "current_command2:",current_command
+        if DebugOn: print "current_command2:",current_command
         split_current_command = current_command.split(' ')
-        print "split_current_command:",split_current_command
+        if DebugOn: print "split_current_command:",split_current_command
         if len(split_current_command) == 2:
             if split_current_command[0] == "left":
                 Left()
             elif split_current_command[0] == "right":
                 Right()
-            elif split_current_command[0] == "Back":
-                Backwards()
+            #elif split_current_command[0] == "Back":
+            #    Backwards()
             elif split_current_command[0] == "back":
                 Backwards()
             elif split_current_command[0] == "backwards":
                 Backwards()
-            elif split_current_command[0] == "Backwards":
-                Backwards()
+            #elif split_current_command[0] == "Backwards":
+            #    Backwards()
             elif split_current_command[0] == "forward":
                Forwards()
             elif split_current_command[0] == "forwards":
                Forwards()
+            elif split_current_command[0] == "stop":
+               StopMotors()
             else:
-                print "Command not recognised"
+                if DebugOn: print "Command not recognised"
                 break # Exit for-loop if command isn't recognised
 
-            value = split_current_command[1]
+            value = split_current_command[1] / 1000.0
     
             time.sleep(value)
             StopMotors()
-            print "echo:"+bashCommand
+            if DebugOn: print "echo:"+bashCommand
 
 # Allow module to settle
 time.sleep(0.5)
 
 try:
 
-    print 'Press Ctrl-C to quit'
+    if DebugOn: print 'Press Ctrl-C to quit'
 
     # Start-up tweet
     dalek_start()
@@ -1089,13 +1109,13 @@ try:
             if moveQuit:
                 break
             elif SelectButton and CircleButton: # Shutdown
-                print ("Halting Raspberry Pi...")
+                if DebugOn: print ("Halting Raspberry Pi...")
                 GPIO.cleanup()
                 bashCommand = ("sudo halt")
                 os.system(bashCommand)
                 break
             elif SelectButton and BButton: # Shutdown
-                print ("Halting Raspberry Pi...")
+                if DebugOn: print ("Halting Raspberry Pi...")
                 GPIO.cleanup()
                 bashCommand = ("sudo halt")
                 os.system(bashCommand)
@@ -1107,41 +1127,41 @@ try:
                 os.system(bashCommand)
                 break
             elif SelectButton and YButton: # Reboot
-                print ("Rebooting Raspberry Pi...")
+                if DebugOn: print ("Rebooting Raspberry Pi...")
                 GPIO.cleanup()
                 bashCommand = ("sudo reboot now")
                 os.system(bashCommand)
                 break
             elif SelectButton and XButton: # Exit
-                print ("Exiting program...")
+                if DebugOn: print ("Exiting program...")
                 break
             elif StartButton and CircleButton: 
                 print ("Start Line-follower")
                 #do_linefollower()
             elif StartButton and SquareButton: 
-                print ("Start Proximity")
+                if DebugOn: print ("Start Proximity")
                 #do_proximity()
             elif StartButton and XButton: 
-                print ("Start Avoidance")
+                if DebugOn: print ("Start Avoidance")
                 #do_proximity()
             #elif SelectButton:
             #    print ("Select")
             #elif StartButton:
             #    print ("Start")
             elif SquareButton:
-                print ("Square")
+                if DebugOn: print ("Square")
             elif XButton:
-                print ("X")
+                if DebugOn: print ("X")
             elif CircleButton:
-                print ("Circle")
+                if DebugOn: print ("Circle")
             elif TriangleButton:
-                print ("Triangle")
+                if DebugOn: print ("Triangle")
             elif YButton:
-                print ("Y")
+                if DebugOn: print ("Y")
             elif AButton:
-                print ("A")
+                if DebugOn: print ("A")
             elif BButton:
-                print ("B")
+                if DebugOn: print ("B")
             elif L1Button:
                 print ("L1")
                 if DutyCycleA < 100:
@@ -1150,27 +1170,27 @@ try:
                    DutyCycleB = DutyCycleB + 10
                 DutyCycleA = min(DutyCycleA, 100)
                 DutyCycleB = min(DutyCycleB, 100)
-                print "Speed: ", DutyCycleA, DutyCycleB
+                if DebugOn: print "Speed: ", DutyCycleA, DutyCycleB
             elif R1Button:
-                print ("R1")
+                if DebugOn: print ("R1")
             elif L2Button:
-                print ("L2")
+                if DebugOn: print ("L2")
                 if DutyCycleA > 0:
                    DutyCycleA = DutyCycleA - 10
                 if DutyCycleB > 0:
                    DutyCycleB = DutyCycleB - 10
                 DutyCycleA = max(DutyCycleA, 0)
                 DutyCycleB = max(DutyCycleB, 0)
-                print "Speed: ", DutyCycleA, DutyCycleB
+                if DebugOn: print "Speed: ", DutyCycleA, DutyCycleB
             elif R2Button:
-                print ("R2")
+                if DebugOn: print ("R2")
             elif L3Button:
-                print ("L3")
-                print "Switching to Left Stick"
+                if DebugOn: print ("L3")
+                if DebugOn: print "Switching to Left Stick"
                 stick = "Left"
             elif R3Button:
-                print ("R3")
-                print "Switching to Right Stick"
+                if DebugOn: print ("R3")
+                if DebugOn: print "Switching to Right Stick"
                 stick = "Right"
             elif LeftStickLeft and LeftStickUp and stick == "Left":
                 FLeft()
@@ -1207,15 +1227,15 @@ try:
             
             if HatStickLeft:
                 Left()
-                print ("Hat Left")
+                if DebugOn: print ("Hat Left")
             elif HatStickRight:
                 Right()
-                print ("Hat Right")
+                if DebugOn: print ("Hat Right")
             elif HatStickUp:
                 Forwards()
-                print ("Hat Up")
+                if DebugOn: print ("Hat Up")
             elif HatStickDown:
-                print ("Hat Down")
+                if DebugOn: print ("Hat Down")
                 Backwards()
             
             if not LeftStickLeft and not LeftStickRight and not LeftStickUp and not RightStickDown and not RightStickLeft and not RightStickRight and not RightStickUp and not LeftStickDown and not HatStickLeft and not HatStickRight and not HatStickUp and not HatStickDown:

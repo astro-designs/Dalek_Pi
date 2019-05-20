@@ -4,6 +4,7 @@
 # A script by Astro Designs ltd
 # Control Dalek-Pi using Twitter
 
+import dalek_pi_config as dalek_pi
 import tweepy
 from tweepy.api import API
 import os
@@ -22,22 +23,29 @@ key.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 
 api = tweepy.API(key)
 
-CameraOn = False
-DriveOn = False
+DebugOn = dalek_pi.DebugOn
+CameraOn = dalek_pi.DebugOn
+DriveOn = dalek_pi.DriveOn
 
 def dalek_start():
     global screen_name
-    i = datetime.now()
-    status = 'Dalek_Pi (v2.01.05) is now on-line. Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-    print "Starting up... Tweeting:", status
-    api.update_status(status=status)
+    if dalek_pi.TweetStart == True:
+        i = datetime.now()
+        status = dalek_pi.StartTweet + i.strftime('%Y/%m/%d %H:%M:%S')
+        print "Starting up... Tweeting:", status
+        api.update_status(status=status)
+    else:
+        print "Starting up... (No Tweeting)"
     
 def dalek_stop():
     global screen_name
-    i = datetime.now()
-    status = 'Dalek_Pi is going off-line ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-    print "Shutting down... Tweeting:", status
-    api.update_status(status=status)
+    if dalek_pi.TweetStop == True:
+        i = datetime.now()
+        status = dalek_pi.StopTweet + i.strftime('%Y/%m/%d %H:%M:%S') 
+        print "Shutting down... Tweeting:", status
+        api.update_status(status=status)
+    else:
+        print "Shutting down... (No Tweeting)"
 
 # Start-up tweet
 dalek_start()
@@ -50,8 +58,7 @@ class Stream2Screen(tweepy.StreamListener):
         self.m = 20
 
     def on_status(self, status):
-        global tweet_rxd, tweet_rxd_data, screen_name, CameraOn, DriveOn
-#        api = tweepy.API(key)
+        global tweet_rxd, tweet_rxd_data, screen_name, CameraOn, DriveOn, DebugOn
         tweet_rxd = status.text.encode('utf8')
         tweet_rxd = str(tweet_rxd)
         tweet_rxd_sender = tweet_rxd.lstrip('@Dalek_Pi')
@@ -66,6 +73,7 @@ class Stream2Screen(tweepy.StreamListener):
         print "Sender: "+screen_name+" ("+user_name+")"
         tweet_rxd = tweet_rxd.lower()
         print "Message:", tweet_rxd
+        print tweet_split[0]
     
         if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
             if DriveOn == True:
@@ -126,16 +134,22 @@ class Stream2Screen(tweepy.StreamListener):
             bashCommand = ("sudo ./text2speech.sh Exterminayte!")
             print "echo:"+bashCommand
             os.system(bashCommand)
-        elif tweet_split[0] == 'driveon' and screen_name == "@AstroDesignsLtd":
+        elif tweet_split[0] == 'Debug_On' and screen_name == "@AstroDesignsLtd":
+            print "Turning on debug"
+            DebugOn = True
+        elif tweet_split[0] == 'Debug_Off' and screen_name == "@AstroDesignsLtd":
+            print "Turning off debug"
+            DebugOn = False
+        elif tweet_split[0] == 'Drive_On' and screen_name == "@AstroDesignsLtd":
             print "Turning on drive"
             DriveOn = True
-        elif tweet_split[0] == 'driveoff' and screen_name == "@AstroDesignsLtd":
+        elif tweet_split[0] == 'Drive_Off' and screen_name == "@AstroDesignsLtd":
             print "Turning off drive"
             DriveOn = False
-        elif tweet_split[0] == 'cameraon' and screen_name == "@AstroDesignsLtd":
+        elif tweet_split[0] == 'Camera_On' and screen_name == "@AstroDesignsLtd":
             print "Turning camera on"
             CameraOn = True
-        elif tweet_split[0] == 'cameraoff' and screen_name == "@AstroDesignsLtd":
+        elif tweet_split[0] == 'Camera_Off' and screen_name == "@AstroDesignsLtd":
             print "Turning camera off"
             CameraOn = False
         elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
@@ -160,9 +174,18 @@ class Stream2Screen(tweepy.StreamListener):
             bashCommand = ("halt")
             print "echo:"+bashCommand
             os.system(bashCommand)
+        elif tweet_split[0] == 'Shutdown' and screen_name == "@AstroDesignsLtd":
+            dalek_stop()
+            bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
+            print "echo:"+bashCommand
+            os.system(bashCommand)
+            bashCommand = ("shutdown")
+            print "echo:"+bashCommand
+            os.system(bashCommand)
         else:
             print "Command not recognised"
-      
+            print "Command: ", "\"", tweet_split[0], "\""
+            print "Screen Name: ", screen_name
             self.n = self.n+1
             if self.n < self.m: return True
             else:
@@ -224,9 +247,13 @@ def dalek_move():
                 pio_command = "pio dalek-left"
             elif split_current_command[0] == "right":
                 pio_command = "pio dalek-right"
+            elif split_current_command[0] == "Back":
+                pio_command = "pio dalek-backwards"
             elif split_current_command[0] == "back":
                 pio_command = "pio dalek-backwards"
             elif split_current_command[0] == "backwards":
+                pio_command = "pio dalek-backwards"
+            elif split_current_command[0] == "Backwards":
                 pio_command = "pio dalek-backwards"
             elif split_current_command[0] == "forward":
                pio_command = "pio dalek-forwards"             

@@ -93,16 +93,15 @@ class Stream2Screen(tweepy.StreamListener):
 				dalek_say()
 			elif tweet_split[0] == 'tweet_help': # Tweet the help-sheet back to whoever sent the tweet
 				i = datetime.now()
-				now = i.strftime('%Y%m%d-%H%M%S')
 				status = screen_name + ' ' + 'Help-sheet auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
 				print "testing tweet_help"
 				api.update_with_media(dalek_pi.help_pic, status=status)
 			elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
 				i = datetime.now()
-				now = i.strftime('%Y%m%d-%H%M%S')
-				photo_name = now + '.jpg'
-				photo_path = dalek_pi.photo_path + photo_name
 				if CameraOn == True:
+					now = i.strftime('%Y%m%d-%H%M%S')
+					photo_name = now + '.jpg'
+					photo_path = dalek_pi.photo_path + photo_name
 					print "Taking picture: " + photo_path
 					bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
 					os.system(bashCommand)
@@ -111,17 +110,13 @@ class Stream2Screen(tweepy.StreamListener):
 					print "Camera is off-line. Sending test image"
 					# Alternatively, send a test-image... Should probably define a global to enable / disable this...
 					status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-					if os.path.exists(dalek_pi.test_pic):
-						print "Tweeting test image:" + dalek_pi.test_pic
-						api.update_with_media(dalek_pi.test_pic, status=status)
-				print "testing tweet_pic:" + status
 				# Check if the file exists before tweeting...
 				if os.path.exists(photo_path):
 					 print "Tweeting image:" + photo_path
 					 api.update_with_media(photo_path, status=status)
-				elif os.path.exists(test_photo_path):
-					 print "Tweeting test image:" + test_photo_path
-					 api.update_with_media(test_photo_path, status=status)
+				elif os.path.exists(dalek_pi.test_pic):
+					 print "Tweeting test image:" + dalek_pi.test_pic
+					 api.update_with_media(dalek_pi.test_pic, status=status)
 			elif tweet_split[0] == 'start_linefollow': # Start line-follower mode. May need to lock-out any other commands if this is running in the background
 				bashCommand = ("pio spi-set 0x07 0")
 				os.system(bashCommand)

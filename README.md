@@ -12,10 +12,13 @@ https://raspi.tv/2013/how-to-create-a-twitter-app-on-the-raspberry-pi-with-pytho
 4) sudo pip install tweepy
 
 (For WiringPi - used for h/w PWM)
+
 5) sudo pip install wiringpi
 
 (For speech)
+
 6) sudo apt-get install festival
 
 (Main program folder)
+
 7) git clone https://github.com/astro-designs/Dalek_Pi.git

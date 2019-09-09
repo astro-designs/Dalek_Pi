@@ -1,6 +1,13 @@
 # Initialisation
 # --------------
 
+from datetime import datetime
+
+i = datetime.now()
+
+# Enable / disable tweeting
+TweetOn = False
+
 # Enable / disable initial tweet at start-up
 TweetStart = True
 
@@ -11,10 +18,13 @@ TweetStop = True
 DebugOn = True
 
 # Enable / disable camera functions
-CameraOn = True
+CameraOn = False
 
 # Enable / disable motor control functions
 DriveOn = True
+
+# Enable / disable voicebox functions
+VoiceOn = True
 
 # Enable / disable remote control option
 RemoteControl = True
@@ -25,8 +35,9 @@ RemoteControl = True
 #StartTweet = 'Dalek_Pi (v2.01.06) is now on-line. Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S') 
 #StartTweet = 'Dalek_Pi (v2.01.07) is now on-line, LIVE in the Workshop at Wychwood 2018! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
 #StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at #RaspberryFields ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
-#StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the @CotswoldJam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
-StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! '
+#StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the @CotswoldJam #rjam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
+#StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the #MarlboroughJam #rjam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
+StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! ' + i.strftime('%Y/%m/%d %H:%M:%S')
 
 # Stop Message
 # ------------
@@ -37,7 +48,8 @@ StopTweet = 'Dalek_Pi is going off-line '
 # YouTubeCh = 'TBD'
 
 # Test Pattern Image
-
+test_photo_name = 'DalekPi-TestImage.jpg'
+test_photo_path = '/home/pi/' + test_photo_name
 
 
 

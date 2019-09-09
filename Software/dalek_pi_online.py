@@ -31,9 +31,11 @@ key = tweepy.OAuthHandler(API_KEY, API_SECRET)
 key.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
 api = tweepy.API(key)
 
+TweetOn = dalek_pi.TweetOn
 DebugOn = dalek_pi.DebugOn
 CameraOn = dalek_pi.DebugOn
 DriveOn = dalek_pi.DriveOn
+VoiceOn = dalek_pi.VoiceOn
 
 # Set the GPIO modes
 GPIO.setmode(GPIO.BCM)
@@ -765,7 +767,7 @@ def dalek_start():
         i = datetime.now()
         status = dalek_pi.StartTweet + i.strftime('%Y/%m/%d %H:%M:%S')
         if DebugOn: print "Starting up... Tweeting:", status
-        api.update_status(status=status)
+        if TweetOn: api.update_status(status=status)
     else:
         print "Starting up... (No Tweeting)"
 
@@ -775,8 +777,8 @@ def dalek_stop():
     if dalek_pi.TweetStop == True:
         i = datetime.now()
         status = dalek_pi.StopTweet + i.strftime('%Y/%m/%d %H:%M:%S') 
-        print "Shutting down... Tweeting:", status
-        api.update_status(status=status)
+        if DebugOn: print "Shutting down... Tweeting:", status
+        if TweetOn: api.update_status(status=status)
     else:
         print "Shutting down... (No Tweeting)"
 
@@ -810,25 +812,53 @@ class Stream2Screen(tweepy.StreamListener):
         if DebugOn: print(tweet_split[0])
     
         # Process movement requests...
-        if tweet_split[0] == 'move':
+        if tweet_split[0] == 'move' and len(tweet_split) == 3:
             if DriveOn == True:
-                dalek_move()
+                direction = tweet_split[1]
+                duration = float(tweet_split[2]) / 1000.0
+                dalek_move(direction, duration)
             else:
                 i = datetime.now()
                 status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-                api.update_status(status=status)
+                if DebugOn: print "Tweeting:", status
+                if TweetOn: api.update_status(status=status)
         
         # Process headpiece movement requests...
         elif tweet_split[0] == 'look':
-            dalek_look()
+            if DriveOn == True:
+                dalek_look()
+            else:
+                i = datetime.now()
+                status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+                if DebugOn: print "Tweeting:", status
+                if TweetOn: api.update_status(status=status)
             
         # Process voice-box requests...
         elif tweet_split[0] == 'voice':
-            dalek_voice()
+            if VoiceOn == True:
+                voice = tweet_rxd.lstrip(' ')
+                voice = voice.lstrip('voice')
+                voice = voice.lstrip(' ')
+                voice = voice.split()
+                dalek_voice(voice)
+            else:
+                i = datetime.now()
+                status = screen_name + ' ' + 'My voice is impared, I cannot speak!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+                if DebugOn: print "Tweeting:", status
+                if TweetOn: api.update_status(status=status)
+
             
-        # Process speach requests...
+        # Process speech requests...
         elif tweet_split[0] == 'say': # Speak whatever comes next...
-            dalek_say()
+            if VoiceOn == True:
+                message = tweet_rxd.lstrip(' say')
+                message = message.lstrip(' ')
+                dalek_say(message)
+            else:
+                i = datetime.now()
+                status = screen_name + ' ' + 'My voice is impared, I cannot speak!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+                if DebugOn: print "Tweeting:", status
+                if TweetOn: api.update_status(status=status)
             
         # Process help requests...
         elif tweet_split[0] == 'tweet_help':
@@ -837,9 +867,8 @@ class Stream2Screen(tweepy.StreamListener):
             image_name = 'help.jpg'
             image_path = '/home/pi/' + image_name
             status = screen_name + ' ' + 'Dalek_Pi Help-sheet: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-            if DebugOn:
-                if DebugOn: print "testing tweet_help"
-            api.update_with_media(image_path, status=status)
+            if DebugOn: print "testing tweet_help"
+            if TweetOn: api.update_with_media(image_path, status=status)
             
         # Process picture requests...
         elif tweet_split[0] == 'tweet_pic':
@@ -862,10 +891,10 @@ class Stream2Screen(tweepy.StreamListener):
             # Check if the file exists before tweeting...
             if os.path.exists(photo_path):
                  if DebugOn: print "Tweeting image:" + photo_path
-                 api.update_with_media(photo_path, status=status)
+                 if TweetOn: api.update_with_media(photo_path, status=status)
             elif os.path.exists(test_photo_path):
                  if DebugOn: print "Tweeting test image:" + test_photo_path
-                 api.update_with_media(test_photo_path, status=status)
+                 if TweetOn: api.update_with_media(test_photo_path, status=status)
         
         # Process request to start line-follower function
         elif tweet_split[0] == 'start_linefollow': # Start line-follower mode. May need to lock-out any other commands if this is running in the background
@@ -973,12 +1002,9 @@ def get_user():
 
 # Tweet to speak function 1
 # Raspberry Pi generated voice
-def dalek_say():
-    global tweet_rxd, tweet_rxd_data, user_name
-    tweet_rxd = tweet_rxd.lstrip(' say')
-    tweet_rxd = tweet_rxd.lstrip(' ')
-    if DebugOn: print "Dalek_Speak: ",tweet_rxd
-    command = 'sudo ./text2speech.sh '+tweet_rxd
+def dalek_say(message = ""):
+    if DebugOn: print "Dalek_Speak: ",message
+    command = 'sudo echo '+message + ' | festival --tts'
     bashCommand = (str(command))
     if DebugOn: print "echo:"+bashCommand
     os.system(bashCommand)
@@ -986,22 +1012,17 @@ def dalek_say():
 
 # Tweet to speak function 2
 # Controls the pre-recorded voice functions from the Dalek voice-box
-def dalek_voice():
-    global tweet_rxd
-    tweet_rxd = tweet_rxd.lstrip(' ')
-    voice_cmd = tweet_rxd.lstrip('voice')
-    voice_cmd = voice_cmd.lstrip(' ')
-    voice_cmd_split = voice_cmd.split()
-    if DebugOn: print "voice_cmd_split:",voice_cmd_split
-    if voice_cmd_split[0] == "1":
+def dalek_voice(voice):
+    if DebugOn: print "voice:",voice
+    if voice == "1":
         GPIO.output(pinDalekSpeak1, True)
-    elif voice_cmd_split[0] == "2":
+    elif voice == "2":
         GPIO.output(pinDalekSpeak2, True)
-    elif voice_cmd_split[0] == "3":
+    elif voice == "3":
         GPIO.output(pinDalekSpeak3, True)
-    elif voice_cmd_split[0] == "4":
+    elif voice == "4":
         GPIO.output(pinDalekSpeak4, True)
-    elif voice_cmd_split[0] == "5":
+    elif voice == "5":
         GPIO.output(pinDalekSpeak5, True)
     else:
         print "Command not recognised"
@@ -1043,42 +1064,37 @@ def dalek_look():
 
  
 #Dalek motor functions
-def dalek_move():
-    global tweet_rxd
-    tweet_rxd = tweet_rxd.lstrip(' move')
-    if DebugOn: print "move tweet_rxd:",tweet_rxd
-    commands = tweet_rxd.split(',')
-    if DebugOn: print "No. Commands:",len(commands)
-    for each in range(0, len(commands)):
-        current_command = commands[each]
-        if DebugOn: print "current_command1:",current_command
-        current_command = current_command.lstrip(' ')
-        if DebugOn: print "current_command2:",current_command
-        split_current_command = current_command.split(' ')
-        if DebugOn: print "split_current_command:",split_current_command
-        if len(split_current_command) == 2:
-            if split_current_command[0] == "left":
-                Left()
-            elif split_current_command[0] == "right":
-                Right()
-            elif split_current_command[0] == "back":
-                Backwards()
-            elif split_current_command[0] == "backwards":
-                Backwards()
-            elif split_current_command[0] == "forward":
-               Forwards()
-            elif split_current_command[0] == "forwards":
-               Forwards()
-            elif split_current_command[0] == "stop":
-               StopMotors()
-            else:
-                if DebugOn: print "Command not recognised"
-                break # Exit for-loop if command isn't recognised
+def dalek_move(direction = "stop", duration = 0):
+    if DebugOn: print("Direction",direction)
+    if DebugOn: print("Duration",duration)
+    if direction == "left":
+        if DebugOn: print ("Turning left...")
+        Left()
+    elif direction == "right":
+        if DebugOn: print ("Turning right...")
+        Right()
+    elif direction == "back":
+        if DebugOn: print ("Driving backwards...")
+        Backwards()
+    elif direction == "backwards":
+        if DebugOn: print ("Driving backwards...")
+        Backwards()
+    elif direction == "forward":
+        if DebugOn: print ("Driving forwards...")
+        Forwards()
+    elif direction == "forwards":
+        if DebugOn: print ("Driving forwards...")
+        Forwards()
+    elif direction == "stop":
+        if DebugOn: print ("Stopping...")
+        StopMotors()
+    else:
+        if DebugOn: print "Command not recognised"
+        if DebugOn: print ("Stopping...")
+        StopMotors()
 
-            value = float(split_current_command[1]) / 1000.0
-    
-            time.sleep(value)
-            StopMotors()
+    time.sleep(duration)
+    StopMotors()
 
 # Allow module to settle
 time.sleep(0.5)
@@ -1090,12 +1106,12 @@ try:
     # Start-up tweet
     dalek_start()
 
-    stream = tweepy.streaming.Stream(key, Stream2Screen())
-    stream.filter(follow=['3997839202'], languages=['en'])
+    #stream = tweepy.streaming.Stream(key, Stream2Screen())
+    #stream.filter(follow=['3997839202'], languages=['en'])
 
     
     # Loop indefinitely
-    while false:
+    while True:
         # Get the currently pressed keys on the keyboard
         PygameHandler(pygame.event.get())
         if hadEvent:
@@ -1139,6 +1155,19 @@ try:
             elif StartButton and XButton: 
                 if DebugOn: print ("Start Avoidance")
                 #do_proximity()
+            elif StartButton and L1Button: 
+                if DebugOn: print ("Test1")
+                dalek_say("Test one")
+            elif StartButton and L2Button: 
+                if DebugOn: print ("Test2")
+                dalek_say("Test two")
+            elif StartButton and R1Button: 
+                if DebugOn: print ("Test3")
+                dalek_voice("1")
+            elif StartButton and R2Button: 
+                if DebugOn: print ("Test4")
+                dalek_voice("2")
+
             #elif SelectButton:
             #    print ("Select")
             #elif StartButton:
@@ -1236,8 +1265,6 @@ try:
             if not LeftStickLeft and not LeftStickRight and not LeftStickUp and not RightStickDown and not RightStickLeft and not RightStickRight and not RightStickUp and not LeftStickDown and not HatStickLeft and not HatStickRight and not HatStickUp and not HatStickDown:
                 StopMotors()
         time.sleep(interval)
-    # Disable all drives
-    StopMotors()
 
 # If CTRL+C is pressed, cleanup and stop
 except KeyboardInterrupt:
@@ -1249,8 +1276,8 @@ except KeyboardInterrupt:
     StopMotors()
 
     # Re-center head servos
-    wiringpi.pwmWrite(PWM_PIN1,DC_Stop)
-    wiringpi.pwmWrite(PWM_PIN2,DC_Stop)
+    wiringpi.pwmWrite(pinServo2,LookStraight)
+    wiringpi.pwmWrite(pinServo1,LookForwards)
     
     # Reset GPIO settings
     GPIO.cleanup()

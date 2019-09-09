@@ -1,10 +1,11 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-# Dalek_Twitter_Pic.py
-# A script by Astro Designs ltd
-# Control Dalek-Pi using Twitter
+# Dalek_Pi_Tweety.py
+# A program by Astro Designs ltd @AstroDesignsLtd
+# Control @Dalek_Pi using Twitter
 
 import dalek_pi_config as dalek_pi
+import dalek_pi_auth
 import tweepy
 from tweepy.api import API
 import os
@@ -13,10 +14,10 @@ import subprocess
 import Tkinter
 from datetime import datetime
 
-API_KEY = 'ZsZ5OpBI2GQqNjEdnSizTWuBS'
-API_SECRET = 'okQJV1egrlI7VRI8mpOjxyr6aiBf2luX7A2OqvojeyjEkTiqe0'
-ACCESS_TOKEN = '3997839202-9zHuKiyoGlvqYJclENL2cGIRKShKogdT50qN76C'
-ACCESS_TOKEN_SECRET = 'v2NBdmtZTGjwrSStpYJpNvjWhXHSsprDPyYUO0B8mUe6E'
+API_KEY = dalek_pi_auth.API_KEY
+API_SECRET = dalek_pi_auth.API_SECRET
+ACCESS_TOKEN = dalek_pi_auth.ACCESS_TOKEN
+ACCESS_TOKEN_SECRET = dalek_pi_auth.ACCESS_TOKEN_SECRET
 
 key = tweepy.OAuthHandler(API_KEY, API_SECRET)
 key.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
@@ -75,123 +76,131 @@ class Stream2Screen(tweepy.StreamListener):
         print "Message:", tweet_rxd
         print tweet_split[0]
     
-        if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
-            if DriveOn == True:
-                dalek_move()
-            else:
-                i = datetime.now()
-                status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-                api.update_status(status=status)
-        elif tweet_split[0] == 'look': # Deal with any look requests from a separate function...
-            dalek_look()
-        elif tweet_split[0] == 'voice': # Deal with any look requests from a separate function...
-            dalek_voice()
-        elif tweet_split[0] == 'say': # Speak whatever comes next...
-            dalek_say()
-        elif tweet_split[0] == 'tweet_help': # Tweet the help-sheet back to whoever sent the tweet
-            i = datetime.now()
-            now = i.strftime('%Y%m%d-%H%M%S')
-            image_name = 'help.jpg'
-            image_path = '/home/pi/' + image_name
-            status = screen_name + ' ' + 'Help-sheet auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-            print "testing tweet_help"
-            api.update_with_media(image_path, status=status)
-        elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
-            i = datetime.now()
-            now = i.strftime('%Y%m%d-%H%M%S')
-            photo_name = now + '.jpg'
-            photo_path = '/home/pi/' + photo_name
-            test_photo_name = 'DalekPi-TestImage.jpg'
-            test_photo_path = '/home/pi/' + test_photo_name
-            if CameraOn == True:
-                print "Taking picture: " + photo_path
-                bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
-                os.system(bashCommand)
-                status = screen_name + ' ' + 'Photo auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-            else:
-                print "Camera is off-line. Sending test image"
-                # Alternatively, send a test-image... Should probably define a global to enable / disable this...
-                status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-            print "testing tweet_pic:" + status
-            # Check if the file exists before tweeting...
-            if os.path.exists(photo_path):
-                 print "Tweeting image:" + photo_path
-                 api.update_with_media(photo_path, status=status)
-            elif os.path.exists(test_photo_path):
-                 print "Tweeting test image:" + test_photo_path
-                 api.update_with_media(test_photo_path, status=status)
-        elif tweet_split[0] == 'start_linefollow': # Start line-follower mode. May need to lock-out any other commands if this is running in the background
-            bashCommand = ("pio spi-set 0x07 0")
-            os.system(bashCommand)
-            bashCommand = ("pio dalek-linefollower 1&")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-        elif tweet_split[0] == 'stop_linefollow':
-            bashCommand = ("pio spi-set 0x07 1")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-        elif tweet_split[0] == 'say_exterminate':
-            bashCommand = ("sudo ./text2speech.sh Exterminayte!")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-        elif tweet_split[0] == 'Debug_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning on debug"
-            DebugOn = True
-        elif tweet_split[0] == 'Debug_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning off debug"
-            DebugOn = False
-        elif tweet_split[0] == 'Drive_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning on drive"
-            DriveOn = True
-        elif tweet_split[0] == 'Drive_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning off drive"
-            DriveOn = False
-        elif tweet_split[0] == 'Camera_On' and screen_name == "@AstroDesignsLtd":
-            print "Turning camera on"
-            CameraOn = True
-        elif tweet_split[0] == 'Camera_Off' and screen_name == "@AstroDesignsLtd":
-            print "Turning camera off"
-            CameraOn = False
-        elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
-            dalek_stop()
-            print "Exit command received & understood. Bye!"
-            #os._exit
-            raise SystemExit
-            
-        elif tweet_split[0] == 'reboot' and screen_name == "@AstroDesignsLtd":
-            dalek_stop()
-            bashCommand = ("sudo ./text2speech.sh Rebooting! Back in a jiffy")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-            bashCommand = ("reboot")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-        elif tweet_split[0] == 'halt' and screen_name == "@AstroDesignsLtd":
-            dalek_stop()
-            bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-            bashCommand = ("halt")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-        elif tweet_split[0] == 'Shutdown' and screen_name == "@AstroDesignsLtd":
-            dalek_stop()
-            bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
-            bashCommand = ("shutdown")
-            print "echo:"+bashCommand
-            os.system(bashCommand)
+        if screen_name != "@Dalek_Pi":
+		
+			if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
+				if DriveOn == True:
+					dalek_move()
+				else:
+					i = datetime.now()
+					status = screen_name + ' ' + 'My drive is impared, I cannot move!: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+					api.update_status(status=status)
+			elif tweet_split[0] == 'look': # Deal with any look requests from a separate function...
+				dalek_look()
+			elif tweet_split[0] == 'voice': # Deal with any look requests from a separate function...
+				dalek_voice()
+			elif tweet_split[0] == 'say': # Speak whatever comes next...
+				dalek_say()
+			elif tweet_split[0] == 'tweet_help': # Tweet the help-sheet back to whoever sent the tweet
+				i = datetime.now()
+				now = i.strftime('%Y%m%d-%H%M%S')
+				image_name = 'help.jpg'
+				image_path = '/home/pi/' + image_name
+				status = screen_name + ' ' + 'Help-sheet auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+				print "testing tweet_help"
+				api.update_with_media(image_path, status=status)
+			elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
+				i = datetime.now()
+				now = i.strftime('%Y%m%d-%H%M%S')
+				photo_name = now + '.jpg'
+				photo_path = '/home/pi/' + photo_name
+				test_photo_name = 'DalekPi-TestImage.jpg'
+				test_photo_path = '/home/pi/' + test_photo_name
+				if CameraOn == True:
+					print "Taking picture: " + photo_path
+					bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
+					os.system(bashCommand)
+					status = screen_name + ' ' + 'Photo auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+				else:
+					print "Camera is off-line. Sending test image"
+					# Alternatively, send a test-image... Should probably define a global to enable / disable this...
+					status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
+					if os.path.exists(test_photo_path):
+						print "Tweeting test image:" + test_photo_path
+						api.update_with_media(test_photo_path, status=status)
+				print "testing tweet_pic:" + status
+				# Check if the file exists before tweeting...
+				if os.path.exists(photo_path):
+					 print "Tweeting image:" + photo_path
+					 api.update_with_media(photo_path, status=status)
+				elif os.path.exists(test_photo_path):
+					 print "Tweeting test image:" + test_photo_path
+					 api.update_with_media(test_photo_path, status=status)
+			elif tweet_split[0] == 'start_linefollow': # Start line-follower mode. May need to lock-out any other commands if this is running in the background
+				bashCommand = ("pio spi-set 0x07 0")
+				os.system(bashCommand)
+				bashCommand = ("pio dalek-linefollower 1&")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			elif tweet_split[0] == 'stop_linefollow':
+				bashCommand = ("pio spi-set 0x07 1")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			elif tweet_split[0] == 'say_exterminate':
+				bashCommand = ("sudo ./text2speech.sh Exterminayte!")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			elif tweet_split[0] == 'Debug_On' and screen_name == "@AstroDesignsLtd":
+				print "Turning on debug"
+				DebugOn = True
+			elif tweet_split[0] == 'Debug_Off' and screen_name == "@AstroDesignsLtd":
+				print "Turning off debug"
+				DebugOn = False
+			elif tweet_split[0] == 'Drive_On' and screen_name == "@AstroDesignsLtd":
+				print "Turning on drive"
+				DriveOn = True
+			elif tweet_split[0] == 'Drive_Off' and screen_name == "@AstroDesignsLtd":
+				print "Turning off drive"
+				DriveOn = False
+			elif tweet_split[0] == 'Camera_On' and screen_name == "@AstroDesignsLtd":
+				print "Turning camera on"
+				CameraOn = True
+			elif tweet_split[0] == 'Camera_Off' and screen_name == "@AstroDesignsLtd":
+				print "Turning camera off"
+				CameraOn = False
+			elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
+				dalek_stop()
+				print "Exit command received & understood. Bye!"
+				#os._exit
+				raise SystemExit
+				
+			elif tweet_split[0] == 'reboot' and screen_name == "@AstroDesignsLtd":
+				dalek_stop()
+				bashCommand = ("sudo ./text2speech.sh Rebooting! Back in a jiffy")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+				bashCommand = ("reboot")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			elif tweet_split[0] == 'halt' and screen_name == "@AstroDesignsLtd":
+				dalek_stop()
+				bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+				bashCommand = ("halt")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			elif tweet_split[0] == 'Shutdown' and screen_name == "@AstroDesignsLtd":
+				dalek_stop()
+				bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+				bashCommand = ("shutdown")
+				print "echo:"+bashCommand
+				os.system(bashCommand)
+			else:
+				print "Command not recognised"
+				print "Command: ", "\"", tweet_split[0], "\""
+				print "Screen Name: ", screen_name
         else:
-            print "Command not recognised"
-            print "Command: ", "\"", tweet_split[0], "\""
-            print "Screen Name: ", screen_name
-            self.n = self.n+1
-            if self.n < self.m: return True
-            else:
-                print 'tweets = '+str(self.n)
-                return False
-    
+        	print "Ignoring own tweet:", "\"", tweet_rxd, "\""
+
+        self.n = self.n+1
+        if self.n < self.m: return True
+        else:
+        	print 'tweets = '+str(self.n)
+        	return False
+			
 def get_user():
     global tweet_rxd_data, user_name, screen_name
     name_index = tweet_rxd_data.find("u'screen_name': u'")

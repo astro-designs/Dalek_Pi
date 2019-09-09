@@ -36,8 +36,8 @@ RemoteControl = True
 #StartTweet = 'Dalek_Pi (v2.01.07) is now on-line, LIVE in the Workshop at Wychwood 2018! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
 #StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at #RaspberryFields ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
 #StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the @CotswoldJam #rjam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
-#StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the #MarlboroughJam #rjam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
-StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! ' + i.strftime('%Y/%m/%d %H:%M:%S')
+StartTweet = 'Dalek_Pi (v2.01.08) is now on-line, LIVE at the #MarlboroughJam #rjam ! Send tweet_help for instructions ' + i.strftime('%Y/%m/%d %H:%M:%S')
+#StartTweet = 'Dalek_Pi is now on-line Testing Testing Obey Obey Obey! ' + i.strftime('%Y/%m/%d %H:%M:%S')
 
 # Stop Message
 # ------------
@@ -48,8 +48,13 @@ StopTweet = 'Dalek_Pi is going off-line '
 # YouTubeCh = 'TBD'
 
 # Test Pattern Image
+
+
+# Test Photo Image
 test_photo_name = 'DalekPi-TestImage.jpg'
-test_photo_path = '/home/pi/' + test_photo_name
+test_pic = '/home/pi/Dalek_Pi/Photos/' + test_photo_name
 
-
+# Help sheet
+help_image_name = 'help.jpg'
+help_pic = '/home/pi/Dalek_Pi/Media/' + help_image_name
 

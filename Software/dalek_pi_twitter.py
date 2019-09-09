@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.7
 # -*- coding: utf-8 -*-
-# Dalek_Pi_Tweety.py
-# A program by Astro Designs ltd @AstroDesignsLtd
+# dalek_pi_twitter.py
+# A program by Astro Designs Ltd @AstroDesignsLtd
 # Control @Dalek_Pi using Twitter
 
 import dalek_pi_config as dalek_pi
@@ -72,12 +72,12 @@ class Stream2Screen(tweepy.StreamListener):
         tweet_rxd_data = str(tweet_rxd_data)
         get_user()
         print "Sender: "+screen_name+" ("+user_name+")"
-        tweet_rxd = tweet_rxd.lower()
         print "Message:", tweet_rxd
         print tweet_split[0]
     
         if screen_name != "@Dalek_Pi":
-		
+
+			# Command Handler...
 			if tweet_split[0] == 'move': # Deal with any movement requests from a separate function...
 				if DriveOn == True:
 					dalek_move()
@@ -94,18 +94,14 @@ class Stream2Screen(tweepy.StreamListener):
 			elif tweet_split[0] == 'tweet_help': # Tweet the help-sheet back to whoever sent the tweet
 				i = datetime.now()
 				now = i.strftime('%Y%m%d-%H%M%S')
-				image_name = 'help.jpg'
-				image_path = '/home/pi/' + image_name
 				status = screen_name + ' ' + 'Help-sheet auto-tweet from Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
 				print "testing tweet_help"
-				api.update_with_media(image_path, status=status)
+				api.update_with_media(dalek_pi.help_pic, status=status)
 			elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
 				i = datetime.now()
 				now = i.strftime('%Y%m%d-%H%M%S')
 				photo_name = now + '.jpg'
-				photo_path = '/home/pi/' + photo_name
-				test_photo_name = 'DalekPi-TestImage.jpg'
-				test_photo_path = '/home/pi/' + test_photo_name
+				photo_path = dalek_pi.photo_path + photo_name
 				if CameraOn == True:
 					print "Taking picture: " + photo_path
 					bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
@@ -115,9 +111,9 @@ class Stream2Screen(tweepy.StreamListener):
 					print "Camera is off-line. Sending test image"
 					# Alternatively, send a test-image... Should probably define a global to enable / disable this...
 					status = screen_name + ' ' + 'Sorry, my camera is off-line. I apologise for the inconvenience - Dalek_Pi: ' + i.strftime('%Y/%m/%d %H:%M:%S') 
-					if os.path.exists(test_photo_path):
-						print "Tweeting test image:" + test_photo_path
-						api.update_with_media(test_photo_path, status=status)
+					if os.path.exists(dalek_pi.test_pic):
+						print "Tweeting test image:" + dalek_pi.test_pic
+						api.update_with_media(dalek_pi.test_pic, status=status)
 				print "testing tweet_pic:" + status
 				# Check if the file exists before tweeting...
 				if os.path.exists(photo_path):
@@ -158,13 +154,11 @@ class Stream2Screen(tweepy.StreamListener):
 			elif tweet_split[0] == 'Camera_Off' and screen_name == "@AstroDesignsLtd":
 				print "Turning camera off"
 				CameraOn = False
-			elif tweet_split[0] == 'exit' and screen_name == "@AstroDesignsLtd":
+			elif tweet_split[0] == 'Exit' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
 				print "Exit command received & understood. Bye!"
-				#os._exit
 				raise SystemExit
-				
-			elif tweet_split[0] == 'reboot' and screen_name == "@AstroDesignsLtd":
+			elif tweet_split[0] == 'Reboot' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
 				bashCommand = ("sudo ./text2speech.sh Rebooting! Back in a jiffy")
 				print "echo:"+bashCommand
@@ -172,7 +166,7 @@ class Stream2Screen(tweepy.StreamListener):
 				bashCommand = ("reboot")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
-			elif tweet_split[0] == 'halt' and screen_name == "@AstroDesignsLtd":
+			elif tweet_split[0] == 'Halt' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
 				bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
 				print "echo:"+bashCommand

@@ -10,6 +10,7 @@
 # Uses the PiZ-Moto motor driver board
 
 import dalek_pi_config as dalek_pi
+import dalek_pi_auth
 import tweepy
 from tweepy.api import API
 import RPi.GPIO as GPIO
@@ -22,10 +23,10 @@ import Tkinter
 import wiringpi as wiringpi
 from datetime import datetime
 
-API_KEY = 'ZsZ5OpBI2GQqNjEdnSizTWuBS'
-API_SECRET = 'okQJV1egrlI7VRI8mpOjxyr6aiBf2luX7A2OqvojeyjEkTiqe0'
-ACCESS_TOKEN = '3997839202-9zHuKiyoGlvqYJclENL2cGIRKShKogdT50qN76C'
-ACCESS_TOKEN_SECRET = 'v2NBdmtZTGjwrSStpYJpNvjWhXHSsprDPyYUO0B8mUe6E'
+API_KEY = dalek_pi_auth.API_KEY
+API_SECRET = dalek_pi_auth.API_SECRET
+ACCESS_TOKEN = dalek_pi_auth.ACCESS_TOKEN
+ACCESS_TOKEN_SECRET = dalek_pi_auth.ACCESS_TOKEN_SECRET
 
 key = tweepy.OAuthHandler(API_KEY, API_SECRET)
 key.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)

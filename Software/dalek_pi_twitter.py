@@ -158,7 +158,7 @@ class Stream2Screen(tweepy.StreamListener):
 				bashCommand = ("sudo " + dalek_pi.speech_script + " Rebooting! Back in a jiffy")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
-				bashCommand = ("reboot")
+				bashCommand = ("reboot now")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 			elif tweet_split[0] == 'Halt' and screen_name == "@AstroDesignsLtd":
@@ -174,7 +174,7 @@ class Stream2Screen(tweepy.StreamListener):
 				bashCommand = ("sudo " + dalek_pi.speech_script + " Shutting down. Goodbye!")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
-				bashCommand = ("shutdown")
+				bashCommand = ("shutdown now")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 			else:

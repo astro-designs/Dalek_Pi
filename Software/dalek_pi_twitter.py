@@ -128,7 +128,7 @@ class Stream2Screen(tweepy.StreamListener):
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 			elif tweet_split[0] == 'say_exterminate':
-				bashCommand = ("sudo ./text2speech.sh Exterminayte!")
+				bashCommand = 'sudo ' + dalek_pi.speech_script + " Exterminayte!"
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 			elif tweet_split[0] == 'Debug_On' and screen_name == "@AstroDesignsLtd":
@@ -155,7 +155,7 @@ class Stream2Screen(tweepy.StreamListener):
 				raise SystemExit
 			elif tweet_split[0] == 'Reboot' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
-				bashCommand = ("sudo ./text2speech.sh Rebooting! Back in a jiffy")
+				bashCommand = ("sudo " + dalek_pi.speech_script + " Rebooting! Back in a jiffy")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 				bashCommand = ("reboot")
@@ -163,7 +163,7 @@ class Stream2Screen(tweepy.StreamListener):
 				os.system(bashCommand)
 			elif tweet_split[0] == 'Halt' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
-				bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
+				bashCommand = ("sudo " + dalek_pi.speech_script + " Shutting down. Goodbye!")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 				bashCommand = ("halt")
@@ -171,7 +171,7 @@ class Stream2Screen(tweepy.StreamListener):
 				os.system(bashCommand)
 			elif tweet_split[0] == 'Shutdown' and screen_name == "@AstroDesignsLtd":
 				dalek_stop()
-				bashCommand = ("sudo ./text2speech.sh Shutting down. Goodbye!")
+				bashCommand = ("sudo " + dalek_pi.speech_script + " Shutting down. Goodbye!")
 				print "echo:"+bashCommand
 				os.system(bashCommand)
 				bashCommand = ("shutdown")
@@ -222,7 +222,7 @@ def dalek_say():
     tweet_rxd = tweet_rxd.lstrip(' say')
     tweet_rxd = tweet_rxd.lstrip(' ')
     print "Dalek_Speak: ",tweet_rxd
-    command = 'sudo ./text2speech.sh '+tweet_rxd
+    command = 'sudo ' + dalek_pi.speech_script + ' ' +tweet_rxd
     bashCommand = (str(command))
     print "echo:"+bashCommand
     os.system(bashCommand)

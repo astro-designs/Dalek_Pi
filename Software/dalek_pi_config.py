@@ -47,6 +47,8 @@ StopTweet = 'Dalek_Pi is going off-line '
 # ---------------
 # YouTubeCh = 'TBD'
 
+# Software path
+speech_script = '/home/pi/Dalek_Pi/Software/text2speech.sh'
 
 # Photo path
 photo_path = '/home/pi/Dalek_Pi/Photos/'

@@ -98,10 +98,10 @@ class Stream2Screen(tweepy.StreamListener):
 				api.update_with_media(dalek_pi.help_pic, status=status)
 			elif tweet_split[0] == 'tweet_pic': # Take a picture & tweet it back to whoever sent the command
 				i = datetime.now()
+				now = i.strftime('%Y%m%d-%H%M%S')
+				photo_name = now + '.jpg'
+				photo_path = dalek_pi.photo_path + photo_name
 				if CameraOn == True:
-					now = i.strftime('%Y%m%d-%H%M%S')
-					photo_name = now + '.jpg'
-					photo_path = dalek_pi.photo_path + photo_name
 					print "Taking picture: " + photo_path
 					bashCommand = ("raspistill -t 500 -hf -vf -w 1024 -h 768 -o " + photo_path)
 					os.system(bashCommand)

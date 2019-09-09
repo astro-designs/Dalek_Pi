@@ -47,8 +47,9 @@ StopTweet = 'Dalek_Pi is going off-line '
 # ---------------
 # YouTubeCh = 'TBD'
 
-# Test Pattern Image
 
+# Photo path
+photo_path = '/home/pi/Dalek_Pi/Photos/'
 
 # Test Photo Image
 test_photo_name = 'DalekPi-TestImage.jpg'
